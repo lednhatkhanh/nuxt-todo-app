@@ -1,11 +1,6 @@
 {
   "todos": [
     {
-      "id": "1",
-      "title": "Go to work",
-      "completed": true
-    },
-    {
       "id": "3",
       "title": "Learn VueJS",
       "completed": true
@@ -19,6 +14,16 @@
       "id": "5",
       "title": "Buy some food at the market",
       "completed": false
+    },
+    {
+      "title": "Go to work",
+      "completed": false,
+      "id": "5L8lS_V"
+    },
+    {
+      "title": "Again, new todo",
+      "completed": false,
+      "id": "WHBWEiM"
     }
   ]
 }

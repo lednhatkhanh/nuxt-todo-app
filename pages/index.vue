@@ -74,6 +74,7 @@ export default {
         addTodo__input: true,
         "addTodo__input--withList": true,
       },
+      abortController: null,
     };
   },
   computed: {
@@ -86,6 +87,12 @@ export default {
     activeTodosCount() {
       return this.todos.filter(todo => !todo.completed).length;
     },
+  },
+  mounted() {
+    this.abortController = new AbortController();
+  },
+  beforeDestroy() {
+    this.abortController.abort();
   },
   methods: {
     async _handleEnter() {
@@ -126,6 +133,7 @@ export default {
             headers: {
               "Content-Type": "application/json; charset=utf-8",
             },
+            signal: this.abortController.signal,
           });
           const newTodo = await rawResult.json();
           return newTodo;
@@ -141,6 +149,7 @@ export default {
             "Content-Type": "application/json; charset=utf-8",
           },
           method: "DELETE",
+          signal: this.abortController.signal,
         });
         return id;
       } catch (error) {
@@ -162,6 +171,7 @@ export default {
           },
           method: "PATCH",
           body: data,
+          signal: this.abortController.signal,
         });
         const toggledTodo = await rawResult.json();
         return toggledTodo;
@@ -172,7 +182,9 @@ export default {
     },
     async _getTodoById(id) {
       try {
-        const rawResult = await fetch(`${BASE_URL}/${id}`);
+        const rawResult = await fetch(`${BASE_URL}/${id}`, {
+          signal: this.abortController.signal,
+        });
         const todo = await rawResult.json();
         return todo;
       } catch (error) {
