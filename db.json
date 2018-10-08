@@ -1,0 +1,24 @@
+{
+  "todos": [
+    {
+      "id": "1",
+      "title": "Go to work",
+      "completed": true
+    },
+    {
+      "id": "3",
+      "title": "Learn VueJS",
+      "completed": true
+    },
+    {
+      "id": "4",
+      "title": "Complete the homework",
+      "completed": false
+    },
+    {
+      "id": "5",
+      "title": "Buy some food at the market",
+      "completed": false
+    }
+  ]
+}

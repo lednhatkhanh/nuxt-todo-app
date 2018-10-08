@@ -1,0 +1,38 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "description": "A simple todo app",
+  "author": "Nhat Khanh",
+  "private": true,
+  "scripts": {
+    "server": "json-server --watch db.json --port 8080",
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
+    "precommit": "npm run lint"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.4",
+    "@fortawesome/free-solid-svg-icons": "^5.3.1",
+    "@fortawesome/vue-fontawesome": "^0.1.1",
+    "cross-env": "^5.2.0",
+    "isomorphic-unfetch": "^3.0.0",
+    "nuxt": "^2.0.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^9.1.5",
+    "babel-eslint": "^8.2.1",
+    "eslint": "^5.0.1",
+    "eslint-config-prettier": "^3.1.0",
+    "eslint-loader": "^2.0.0",
+    "eslint-plugin-prettier": "2.6.2",
+    "eslint-plugin-vue": "^4.0.0",
+    "json-server": "^0.14.0",
+    "node-sass": "^4.9.3",
+    "nodemon": "^1.11.0",
+    "prettier": "1.14.3",
+    "sass-loader": "^7.1.0"
+  }
+}
