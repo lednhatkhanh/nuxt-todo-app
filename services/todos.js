@@ -1,3 +1,5 @@
+import fetch from "isomorphic-unfetch";
+
 export default class TodosService {
   BASE_URL = "http://localhost:8080/todos";
 
@@ -79,6 +81,29 @@ export default class TodosService {
       }
       const data = JSON.stringify({
         completed: !togglingTodo.completed,
+      });
+      const rawResult = await fetch(`${this.BASE_URL}/${id}`, {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+        method: "PATCH",
+        body: data,
+        signal: this.abortController.signal,
+      });
+      return await rawResult.json();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async updateTodoTitle(id, title) {
+    try {
+      const updatingTodo = await this.getTodoById(id);
+      if (!updatingTodo) {
+        return null;
+      }
+      const data = JSON.stringify({
+        title,
       });
       const rawResult = await fetch(`${this.BASE_URL}/${id}`, {
         headers: {

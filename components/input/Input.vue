@@ -1,5 +1,5 @@
 <template>
-  <input :placeholder="placeholder" :value="value" class="input" type="text" @input="_onChange" @keypress="_onKeyPress" @dblclick="_onDoubleClick">
+  <input :placeholder="placeholder" :value="value" class="input" type="text" @input="_onChange" @keypress="_onKeyPress" @dblclick="_onDoubleClick" @blur="_onBlur">
 </template>
 
 <script>
@@ -25,6 +25,9 @@ export default {
     },
     _onDoubleClick(event) {
       this.$emit("onDoubleClick", event);
+    },
+    _onBlur(event) {
+      this.$emit("onBlur", event);
     },
   },
 };

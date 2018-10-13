@@ -8,7 +8,9 @@
           <font-awesome-icon icon="chevron-down" fixed-width />
         </todo-icon-button>
       </div>
-      <todo-list :todos="_getTodos()" @onToggleTodo="_handleToggleTodo" @onRemoveTodo="_handleRemoveTodo" />
+      <todo-list>
+        <todo-item v-for="todo in getFilteredTodos" :todo="todo" :key="todo.id" @onToggle="_handleToggleTodo" @onRemove="_handleRemoveTodo" @onEditTitle="_handleEditTitle" />
+      </todo-list>
       <footer v-if="todos.length > 0" class="footer">
         <span class="todoCount">{{ activeTodosCount }} items left</span>
         <todo-filter-list>
@@ -36,6 +38,7 @@ import Container from "~/components/Container.vue";
 import Header from "~/components/Header.vue";
 import Input from "~/components/input/Input.vue";
 import TodoList from "~/components/todos/TodoList.vue";
+import TodoItem from "~/components/todos/TodoItem.vue";
 import FilterList from "~/components/filter/FilterList.vue";
 import FilterItem from "~/components/filter/FilterItem.vue";
 import TodosService from "../services/todos.js";
@@ -52,6 +55,7 @@ export default {
     FontAwesomeIcon,
     TodoIconButton: IconButton,
     TodoList,
+    TodoItem,
     TodoFilterList: FilterList,
     TodoFilterItem: FilterItem,
   },
@@ -101,6 +105,14 @@ export default {
     activeTodosCount() {
       return this.todos.filter(todo => !todo.completed).length;
     },
+    getFilteredTodos() {
+      if (this.filter === "all") {
+        return this.todos;
+      }
+      return this.todos.filter(
+        todoItem => todoItem.completed === (this.filter === "completed"),
+      );
+    },
   },
   mounted() {
     this.abortController = new AbortController();
@@ -115,14 +127,6 @@ export default {
     },
     _toggleFilter(value) {
       this.filter = value;
-    },
-    _getTodos() {
-      if (this.filter === "all") {
-        return this.todos;
-      }
-      return this.todos.filter(
-        todoItem => todoItem.completed === (this.filter === "completed"),
-      );
     },
     async _handleEnter() {
       const newTodo = await this.todosService.createNewTodo(this.text);
@@ -145,6 +149,22 @@ export default {
       const removedId = await this.todosService.removeTodo(id);
       if (removedId !== null) {
         this.todos = this.todos.filter(todo => todo.id !== id);
+      }
+    },
+    async _handleEditTitle(id, title) {
+      if (title) {
+        const updatedTodo = await this.todosService.updateTodoTitle(id, title);
+        if (updatedTodo) {
+          this.todos = this.todos.map(todo => {
+            if (todo.id === updatedTodo.id) {
+              return {
+                ...todo,
+                title: updatedTodo.title,
+              };
+            }
+            return todo;
+          });
+        }
       }
     },
   },

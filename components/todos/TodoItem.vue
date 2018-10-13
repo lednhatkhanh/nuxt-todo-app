@@ -1,7 +1,8 @@
 <template>
-  <li :class="computedClassName">
-    <todo-check-box :checked="todo.completed" class="todoItem__toggle" @update:checked="_onCheckboxChange" />
-    <span class="todoItem__text">{{ todo.title }}</span>
+  <li :class="computedClassName" @dblclick="_handleDoubleClick">
+    <todo-check-box :checked="todo.completed" @update:checked="_onCheckboxChange" />
+    <span v-if="!editing" class="todoItem__text">{{ todo.title }}</span>
+    <todo-input v-else :value.sync="title" class="todoItem__editInput" @onEnter="_handleCompleteEditing" />
     <todo-icon-button class="todoItem__remove" @onClick="_onRemoveButtonClick">
       <font-awesome-icon icon="times" fixed-width />
     </todo-icon-button>
@@ -12,12 +13,14 @@
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 import Checkbox from "~/components/input/Checkbox.vue";
+import Input from "~/components/input/Input.vue";
 import IconButton from "~/components/button/IconButton.vue";
 
 export default {
   components: {
     TodoCheckBox: Checkbox,
     TodoIconButton: IconButton,
+    TodoInput: Input,
     FontAwesomeIcon,
   },
   props: {
@@ -26,11 +29,18 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      editing: false,
+      title: this.todo.title,
+    };
+  },
   computed: {
     computedClassName() {
       return {
         todoItem: true,
         "todoItem--completed": this.todo.completed,
+        "todoItem--editing": this.editing,
       };
     },
   },
@@ -41,6 +51,14 @@ export default {
     _onRemoveButtonClick() {
       this.$emit("onRemove", this.todo.id);
     },
+    _handleDoubleClick() {
+      this.editing = true;
+    },
+    _handleCompleteEditing() {
+      this.editing = false;
+      this.$emit("onEditTitle", this.todo.id, this.title);
+      this.title = this.todo.title;
+    },
   },
 };
 </script>
@@ -50,10 +68,15 @@ export default {
   position: relative;
   border-bottom: 1px solid #ededed;
   padding: 2rem 1.5rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   font-size: 2rem;
+  display: grid;
+  align-items: center;
+  grid-template-columns: min-content 1fr min-content;
+  grid-column-gap: 1.5rem;
+
+  &--editing {
+    padding: 0 1.5rem;
+  }
 
   &--completed {
     .todoItem__text {
@@ -68,19 +91,17 @@ export default {
     }
   }
 
-  &__toggle {
-    margin-right: 1.5rem;
-  }
-
   &__remove {
     color: rgba(175, 47, 47, 1);
-    position: absolute;
-    right: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-
     opacity: 0;
     transition: opacity 0.25s ease-in-out;
+  }
+
+  &__editInput {
+    box-shadow: none;
+    border: var(--line);
+    font-size: 2rem;
+    padding: 2rem;
   }
 }
 </style>

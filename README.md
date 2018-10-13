@@ -12,7 +12,7 @@ This is a simple todo app built with NuxtJS.
 ## TODOS
 
 - [x] Filter todos.
-- [ ] Change todo title.
+- [x] Change todo title.
 
 ## LICENSE
 
