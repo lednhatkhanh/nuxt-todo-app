@@ -3,14 +3,19 @@
     <todo-header title="Todos" />
     <main :class="mainClassName">
       <div class="addTodo">
-        <todo-input :value.sync="text" :class="addTodoInputClass" placeholder="What needs to be done?" @onEnter="_handleEnter" @onDoubleClick="_handleDoubleClick" />
+        <todo-input :value.sync="text" :class="addTodoInputClassName" placeholder="What needs to be done?" @onEnter="_handleEnter" @onDoubleClick="_handleDoubleClick" />
         <todo-icon-button class="toggleAll">
           <font-awesome-icon icon="chevron-down" fixed-width />
         </todo-icon-button>
       </div>
-      <todo-list :todos="todos" @onToggleTodo="_handleToggleTodo" @onRemoveTodo="_handleRemoveTodo" />
+      <todo-list :todos="_getTodos()" @onToggleTodo="_handleToggleTodo" @onRemoveTodo="_handleRemoveTodo" />
       <footer v-if="todos.length > 0" class="footer">
         <span class="todoCount">{{ activeTodosCount }} items left</span>
+        <todo-filter-list>
+          <todo-filter-item :active="_getActiveFilter('all')" @onClick="_toggleFilter('all')">All</todo-filter-item>
+          <todo-filter-item :active="_getActiveFilter('active')" @onClick="_toggleFilter('active')">Active</todo-filter-item>
+          <todo-filter-item :active="_getActiveFilter('completed')" @onClick="_toggleFilter('completed')">Completed</todo-filter-item>
+        </todo-filter-list>
       </footer>
     </main>
   </container>
@@ -31,6 +36,9 @@ import Container from "~/components/Container.vue";
 import Header from "~/components/Header.vue";
 import Input from "~/components/input/Input.vue";
 import TodoList from "~/components/todos/TodoList.vue";
+import FilterList from "~/components/filter/FilterList.vue";
+import FilterItem from "~/components/filter/FilterItem.vue";
+import TodosService from "../services/todos.js";
 
 library.add(faChevronDown, faCheck, faTimes);
 
@@ -44,6 +52,8 @@ export default {
     FontAwesomeIcon,
     TodoIconButton: IconButton,
     TodoList,
+    TodoFilterList: FilterList,
+    TodoFilterItem: FilterItem,
   },
   head() {
     return {
@@ -70,11 +80,9 @@ export default {
     return {
       text: "",
       todos: [],
-      addTodoInputClass: {
-        addTodo__input: true,
-        "addTodo__input--withList": true,
-      },
       abortController: null,
+      todosService: null,
+      filter: "all",
     };
   },
   computed: {
@@ -84,19 +92,40 @@ export default {
         "main--withList": this.todos.length > 0,
       };
     },
+    addTodoInputClassName() {
+      return {
+        addTodo__input: true,
+        "addTodo__input--withList": this.todos.length > 0,
+      };
+    },
     activeTodosCount() {
       return this.todos.filter(todo => !todo.completed).length;
     },
   },
   mounted() {
     this.abortController = new AbortController();
+    this.todosService = new TodosService(this.abortController);
   },
   beforeDestroy() {
     this.abortController.abort();
   },
   methods: {
+    _getActiveFilter(value) {
+      return this.filter === value;
+    },
+    _toggleFilter(value) {
+      this.filter = value;
+    },
+    _getTodos() {
+      if (this.filter === "all") {
+        return this.todos;
+      }
+      return this.todos.filter(
+        todoItem => todoItem.completed === (this.filter === "completed"),
+      );
+    },
     async _handleEnter() {
-      const newTodo = await this._createNewTodo();
+      const newTodo = await this.todosService.createNewTodo(this.text);
       if (newTodo) {
         this.todos.push(newTodo);
         this.text = "";
@@ -106,89 +135,16 @@ export default {
       this._handleEnter();
     },
     async _handleToggleTodo(id) {
-      const toggledTodo = await this._toggleTodo(id);
+      const toggledTodo = await this.todosService.toggleTodo(id);
       const index = this.todos.findIndex(todo => todo.id === toggledTodo.id);
       if (index >= 0) {
         this.todos[index].completed = toggledTodo.completed;
       }
     },
     async _handleRemoveTodo(id) {
-      const removedId = await this._removeTodo(id);
+      const removedId = await this.todosService.removeTodo(id);
       if (removedId !== null) {
         this.todos = this.todos.filter(todo => todo.id !== id);
-      }
-    },
-    async _createNewTodo() {
-      const title = this.text;
-      if (title) {
-        const todoData = {
-          title,
-          completed: false,
-        };
-        const jsonData = JSON.stringify(todoData);
-        try {
-          const rawResult = await fetch(`${BASE_URL}`, {
-            method: "POST",
-            body: jsonData,
-            headers: {
-              "Content-Type": "application/json; charset=utf-8",
-            },
-            signal: this.abortController.signal,
-          });
-          const newTodo = await rawResult.json();
-          return newTodo;
-        } catch (error) {
-          return null;
-        }
-      }
-    },
-    async _removeTodo(id) {
-      try {
-        const rawResult = await fetch(`${BASE_URL}/${id}`, {
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-          },
-          method: "DELETE",
-          signal: this.abortController.signal,
-        });
-        return id;
-      } catch (error) {
-        return null;
-      }
-    },
-    async _toggleTodo(id) {
-      try {
-        const togglingTodo = await this._getTodoById(id);
-        if (!togglingTodo) {
-          return null;
-        }
-        const data = JSON.stringify({
-          completed: !togglingTodo.completed,
-        });
-        const rawResult = await fetch(`${BASE_URL}/${id}`, {
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-          },
-          method: "PATCH",
-          body: data,
-          signal: this.abortController.signal,
-        });
-        const toggledTodo = await rawResult.json();
-        return toggledTodo;
-      } catch (error) {
-        console.log(error);
-        return null;
-      }
-    },
-    async _getTodoById(id) {
-      try {
-        const rawResult = await fetch(`${BASE_URL}/${id}`, {
-          signal: this.abortController.signal,
-        });
-        const todo = await rawResult.json();
-        return todo;
-      } catch (error) {
-        return null;
       }
     },
   },
@@ -229,6 +185,10 @@ export default {
 
 .footer {
   padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  align-items: center;
+  justify-content: space-between;
 }
 
 .todoCount {
